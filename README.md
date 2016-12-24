@@ -3,7 +3,7 @@ this add some loop macros that support break/continue operators without exceptio
 
 # performance
 
-```
+```lisp
 (defun sum-faster (num)
     (let ((sum 0))
         (while (< 0 num)
@@ -36,7 +36,7 @@ this add some loop macros that support break/continue operators without exceptio
 
 compiled
 
-```
+```lisp
 (0.06407903499999999 0 0.0)
 (0.21623230499999999 0 0.0) ;; using catch and throw
 (0.069179176 0 0.0) ;; using goot
@@ -44,7 +44,7 @@ compiled
 
 not compiled
 
-```
+```lisp
 (0.266857461 0 0.0)
 (0.46639740399999996 0 0.0) ;; using catch and throw
 (0.423916996 0 0.0) ;; using goot
