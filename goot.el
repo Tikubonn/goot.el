@@ -88,6 +88,11 @@
     ((goot-recipe nil)
       (goot-recipes nil))
 
+    ;; before macro expand all
+
+    (mapc 'macroexpand-all
+      formula)
+    
     ;; read source tree and
     ;; stack the elements to source tree recipes 
 
