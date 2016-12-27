@@ -133,8 +133,8 @@
     (if (consp tree)
       (if (equal `(quote ,goot-break-symbol) tree) t
         (if (equal `(quote ,goot-continue-symbol) tree) t
-          (cons (goot-listen-build2mad-translate (car tree))            
-            (goot-listen-build2mad-translate (cdr tree)))))
+          (cons (goot-listen-build2mad-transform (car tree))            
+            (goot-listen-build2mad-transform (cdr tree)))))
       (if (eq goot-break-symbol tree) nil
         (if (eq goot-continue-symbol tree) t
           tree)))))
