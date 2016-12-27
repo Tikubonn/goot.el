@@ -3,183 +3,272 @@
 
 (require 'cl)
 
-;; provide goot.el 
+;; provide goot
 
 (provide 'goot)
 
-;; define internal variables 
+;; define internal variables
 
-(defvar goot-recipe nil)
+(defvar goot-source nil "this is used dynamically in goot.el. so this is not used globally.")
 
-(defvar goot-recipes nil)
+(defvar goot-sources nil "this is used dynamically in goot.el. so this is not used globally.")
 
-(defconst goot-continue-symbol
-  (let ((symcontinue (gensym)))
-    (prog1 symcontinue
-      (setf (symbol-value symcontinue) symcontinue))))
+(defvar goot-break-symbol nil "this is used dynamically in goot.el. so this is not used globally.")
 
-(defconst goot-break-symbol
-  (let ((symbreak (gensym)))
-    (prog1 symbreak
-      (setf (symbol-value symbreak) symbreak))))
+(defvar goot-continue-symbol nil "this is used dynamically in goot.el. so this is not used globally.")
 
-;; define internal methods
+(defvar goot-continue nil "this is used to hint for transforming in goot.el")
 
-(defmacro goot-pop-recipe ()
-  `(pop goot-recipe))
+(defvar goot-break nil "this is used to hint for transforming in goot.el")
 
-(defmacro goot-push-recipe (element)
-  `(push ,element goot-recipe))
+;; define alias macros
 
-(defmacro goot-push-recipes ()
-  `(progn 
-     (push (nreverse goot-recipe) goot-recipes)
-     (setq goot-recipe nil)))
+(defmacro goot-continue () "this is alias of symbol of `goot-continue'."
+  'goot-continue)
 
-(defmacro goot-ignore-close ()
-  `(while (and goot-recipe (eq :close (car goot-recipe)))
-     (pop goot-recipe)))
+(defmacro goot-break () "this is alias of symbol of  `goot-break'."
+  'goot-break)
 
-(defmacro goot-filter (func sequence)
-  (let
-    ((symsequence (gensym))
-      (symelement (gensym)))
-    `(let ((,symsequence nil))
-       (dolist (,symelement ,sequence)
-         (when(funcall ,func ,symelement)
-           (push ,symelement ,symsequence)))
-       (nreverse ,symsequence))))
-
-(defmacro goot-case4 (formula &rest conditions)
-  (goot-case-internal4 formula conditions))
-
-(defun goot-case-internal4 (formula conditions &optional expanded)
-  (when conditions
-    (if (eq 'otherwise (caar conditions))
-      (if (null expanded)
-        `(goot-progn ,formula ,(car (cdar conditions)))
-        `(goot-progn ,@(cdar conditions)))
-      (if (goot-symfind (caar conditions) formula)
-        `(if (eq ,formula ,(caar conditions))
-           (goot-progn ,@(cdar conditions))
-           ,(goot-case-internal4 formula (cdr conditions) t))
-        (goot-case-internal4 formula (cdr conditions) expanded)))))
+;; goot-progn section
+;; goot-progn for readable.
 
 (defmacro goot-progn (&rest rest)
-  (if (cdr rest) `(progn ,@rest) (car rest)))
+  (if (cdr rest)
+    `(progn ,@rest)
+    (car rest)))
 
-(defun goot-symfind (sym formula)
-  (if (null formula) nil
-    (if (consp formula)
+;; goot-filter sectiom
+;; return a filtered consing list,
+;; because filter is not defined in the cl.el and standard methods.
+
+(defun goot-filter (func sequence)
+  (let ((result nil))
+    (dolist (element sequence)
+      (when (funcall func element)
+        (push element result)))
+    (nreverse result)))
+
+;; goot-case section
+;; this is not usefull for many cases.
+;; this return a formula that is more smaller than elementary case macro.
+;; so, more faster elementary case macro.
+
+(defun goot-symfind (sym tree)
+  (if (null tree) nil
+    (if (consp tree)
       (or
-        (goot-symfind sym (car formula))
-        (goot-symfind sym (cdr formula)))
-      (eq sym formula))))
+        (goot-symfind sym (car tree))
+        (goot-symfind sym (cdr tree)))
+      (eq sym tree))))
 
-(defmacro goot-test (formula)
-  (prog1 formula
-    (print (macroexpand-all formula))))
+;; goot-listen-load section
+;; translate to recipe for regeneration.
+;; this use dynamic variables of goot-source and goot-sources.
 
-(defmacro goot-listen (&rest formula)
+(defun goot-listen-load-confirm ()
+  (push (nreverse goot-source) goot-sources)  
+  (setq goot-source nil))
 
-    ;; allocate temp variables to local scope 
-  
-  (let
-    ((goot-recipe nil)
-      (goot-recipes nil))
-
-    ;; before macro expand all
-
-    (mapc 'macroexpand-all
-      formula)
-    
-    ;; read source tree and
-    ;; stack the elements to source tree recipes 
-
-    (dolist (form formula)
-      (goot-listen-internal form)
-      (when goot-recipe (goot-push-recipes)))
-    
-    (setq goot-recipes
-      (nreverse goot-recipes))
-
-    ;; generate a list of source tree
-    ;; with a source tree recipe
-    
-    (setq goot-recipes
-      
-      (mapcar
-        (lambda (goot-recipe)
-          (goot-build))
-        
-        (goot-filter
-          (lambda (a) a)
-          
-          (mapcar
-            (lambda (goot-recipe)
-              (goot-ignore-close)
-              goot-recipe)
-            
-            goot-recipes))))
-
-    ;; build ( translate ) to nested
-    ;; source tree
-
-    (goot-build2 goot-recipes)))
-
-(defun goot-build2 (formula)
-  (when formula
-    (case (car formula)      
-      (:goot-break nil)
-      (:goot-continue t)      
-      (otherwise
-        `(goot-case4 ,(car formula)
-           (:goot-break nil)
-           (:goot-continue t)
-           (otherwise ,(goot-build2 (cdr formula))))))))
-
-(defun goot-build ()
-  (when goot-recipe
-    (let ((element (goot-pop-recipe)))
-      (case element
-        (:open          
-          (let*
-            ((element-car (goot-build))
-              (element-cdr (goot-build)))
-            (cons element-car element-cdr)))        
-        (:close nil)
-        (otherwise element)))))
-
-(defun goot-listen-internal (formula) 
-  (if (null formula)
-    (goot-push-recipe :close)    
-    (if (consp formula)
-      (progn        
-        (goot-push-recipe :open)
-        (goot-listen-internal (car formula))
-        (goot-listen-internal (cdr formula)))      
+(defun goot-listen-load (tree) 
+  (if (null tree)
+    (progn
+      (push :nil goot-source))
+    (if (consp tree)
       (progn
-        (case formula
-          (goot-break (goot-push-recipe :goot-break) (goot-push-recipes))
-          (goot-continue (goot-push-recipe :goot-continue) (goot-push-recipes))
-          (otherwise (goot-push-recipe formula))))
-      )))
+        (push :cons  goot-source)
+        (goot-listen-load (car tree))
+        (goot-listen-load (cdr tree)))
+      (progn
+        (push :pop goot-source)
+        (case tree
+          (goot-break (push  `(quote ,goot-break-symbol) goot-source) (goot-listen-load-confirm))
+          (goot-continue (push `(quote ,goot-continue-symbol) goot-source) (goot-listen-load-confirm))
+          (otherwise (push tree goot-source)))))))
 
-;; define basic methods
+;; define goot-listen-build section
+;; regenerate a source tree from recipe.
+;; this use a dynamic variable of goot-source.
 
-(defmacro goot-while (condition &rest rest)
-  `(while (and ,condition (goot-listen ,@rest goot-continue))))
+(defun goot-listen-build-internal ()
+  (if (null goot-source) nil
+    (case (pop goot-source)
+      (:nil nil)
+      (:pop (pop goot-source))
+      (:cons
+        (cons
+          (goot-listen-build-internal)
+          (goot-listen-build-internal))))))
 
-(defmacro goot-until (condition &rest rest)
-  `(while (and (not ,condition) (goot-listen ,@rest goot-continue))))
+(defun goot-listen-build-trim ()
+  (while (and goot-source (eq :nil (car goot-source)))
+    (pop goot-source)))
 
-(defmacro goot-loop (&rest rest)
-  `(while (goot-listen ,@rest goot-continue)))
+(defun goot-listen-build (source)
+  (let ((goot-source source))
+    (goot-listen-build-trim)
+    (goot-listen-build-internal)))
 
-(defmacro goot-for (condition increment &rest rest)
-  `(while (prog1
-            (and ,condition (goot-listen ,@rest goot-continue))
-            ,increment)))
+;; new goot-listen-build2 section
+;; this is more faster than old version.
+;; because it less generate nest progn.
 
-(defmacro goot-block (&rest rest)
-  `(while (goot-listen ,@rest goot-break)))
+(defun goot-listen-build2 (sources &optional acc)
+  (if (null sources) nil
+    (if (equal `(quote ,goot-break-symbol) (car sources)) `(goot-progn ,@(nreverse acc) nil)
+      (if (equal `(quote ,goot-continue-symbol) (car sources)) `(goot-progn ,@(nreverse acc) t)
+        (if (goot-symfind goot-break-symbol (car sources))
+          (let ((formula `(if (eq (quote ,goot-break-symbol) ,(car sources)) nil  ,(goot-listen-build2 (cdr sources)))))
+            (if acc `(progn ,@(nreverse acc) ,formula) formula))
+          (if (goot-symfind goot-continue-symbol (car sources))
+            (let ((formula `(if (eq (quote ,goot-continue-symbol) ,(car sources)) t ,(goot-listen-build2 (cdr sources)))))
+              (if acc `(progn ,@(nreverse acc) ,formula) formula))
+            (goot-listen-build2 (cdr sources) (cons (car sources) acc))))))))
+
+;; goot-listen-buildmad section
+;; this is most faster in the  goot.el
+;; this has limit the position of goot-break/goot-continue.
+
+(defun goot-listen-build2mad-transform (tree)
+  (if (null tree) nil    
+    (if (consp tree)
+      (if (equal `(quote ,goot-break-symbol) tree) t
+        (if (equal `(quote ,goot-continue-symbol) tree) t
+          (cons (goot-listen-build2mad-translate (car tree))            
+            (goot-listen-build2mad-translate (cdr tree)))))
+      (if (eq goot-break-symbol tree) nil
+        (if (eq goot-continue-symbol tree) t
+          tree)))))
+
+(defun goot-listen-build2mad (sources &optional acc)
+  (if (null sources) nil
+    (if (equal `(quote ,goot-break-symbol) (car sources)) `(goot-progn ,@(nreverse acc) nil)
+      (if (equal `(quote ,goot-continue-symbol) (car sources)) `(goot-progn ,@(nreverse acc) t)
+        (if (goot-symfind goot-break-symbol (car sources))
+          (let ((formula `(if ,(goot-listen-build2mad-transform (car sources)) nil  ,(goot-listen-build2 (cdr sources)))))
+            (if acc `(progn ,@(nreverse acc) ,formula) formula))
+          (if (goot-symfind goot-continue-symbol (car sources))
+            (let ((formula `(if  ,(goot-listen-build2mad-transform (car sources)) t ,(goot-listen-build2 (cdr sources)))))
+              (if acc `(progn ,@(nreverse acc) ,formula) formula))
+            (goot-listen-build2 (cdr sources) (cons (car sources) acc))))))))
+
+;; goot-listen section
+;; translate the formula with goot-break/goot-continue symbols.
+;; translated formula is not contain the exception oprators.
+
+(defmacro goot-listen (&rest rest)
+
+  "this transform to new source tree with use the `goot-break'/`goot-continue' symbols to hint the transform.
+this transforming not use exception oprators, so this transformed is faster than using `catch'/`throw' functions."
+  
+  (let ((goot-source nil)
+         (goot-sources nil)
+         (goot-break-symbol (gensym))
+         (goot-continue-symbol (gensym)))
+    (setq rest
+      (mapcar 'macroexpand-all rest))    
+    (dolist (source rest)
+      (goot-listen-load source)
+      (goot-listen-load-confirm))
+    (setq goot-sources
+      (nreverse goot-sources))    
+    (setq goot-sources      
+      (goot-filter (lambda (a) a)
+        (mapcar 'goot-listen-build goot-sources)))    
+    (goot-listen-build2 goot-sources)))
+
+(defmacro goot-listenmad (&rest rest)
+
+  "this provide optimized `goot-listen' that has some limitations.
+so transformed formula is faster and lesser than `goot-listen'.
+you can see `goot-listen' if you want to get more information."
+  
+  (let ((goot-source nil)
+         (goot-sources nil)
+         (goot-break-symbol (gensym))
+         (goot-continue-symbol (gensym)))
+    (setq rest
+      (mapcar 'macroexpand-all rest))    
+    (dolist (source rest)
+      (goot-listen-load source)
+      (goot-listen-load-confirm))
+    (setq goot-sources
+      (nreverse goot-sources))    
+    (setq goot-sources      
+      (goot-filter (lambda (a) a)
+        (mapcar 'goot-listen-build goot-sources)))    
+    (goot-listen-build2mad goot-sources)))
+
+;; define provide methods
+
+(defmacro goot-forever (&rest body)
+
+  "this evaluate body section forever, until to reach the `goot-break'.
+you can repeat this section from the beginning with using `goot-continue' oprator."
+
+  `(while (goot-listen ,@body goot-continue)))
+
+(defmacro goot-while (condition &rest body)
+
+  "this evaluate body section forever, until to reach the `goot-break', or condition was failed.
+you can repeat this section from the beginning with using `goot-continue' oprator."
+
+  `(while (and ,condition (goot-listen ,@body goot-continue))))
+
+(defmacro goot-until (condition &rest body)
+
+  "this evaluate body section forever, until to reach the `goot-break', or condition was successed.
+you can repeat this section from the beginning with using `goot-continue' oprator."
+  
+  `(while (and (not ,condition) (goot-listen ,@body goot-continue))))
+
+(defmacro goot-for (condition increment &rest body)
+
+  "this evaluate body section forever, until to reach the `goot-break', or condition was failed.
+you can repeat this section from the beginning with using `goot-continue'oprator.
+increment is evaluate always at end of loop."
+  
+  `(while (prog1 (and ,condition (goot-listen ,@body goot-continue)) ,increment)))
+
+(defmacro goot-block (&rest body)
+
+  "this evaluate body section one times.
+you can repeat or abort this section with `goot-break' or `goot-continue' oprators."
+  
+  `(while (goot-listen ,@body goot-break)))
+
+;; define provide optimized methods
+
+(defmacro goot-forevermad (&rest body)
+
+  "this provide a optimized `goot-forever' that has some limitations, so this is faster than `goot-forever'.
+you can see `goot-forever' if you want to get more information."
+  
+  `(while (goot-listenmad ,@body goot-continue)))
+
+(defmacro goot-whilemad (condition &rest body)
+
+  "this provide a optimized `goot-while' that has some limitations, so this is faster than `goot-while'.
+you can see `goot-while' if you want to get more information."
+  
+  `(while (and ,condition (goot-listenmad ,@body goot-continue))))
+
+(defmacro goot-untilmad (condition &rest body)
+
+  "this provide a optimized `goot-until' that has some limitations, so this is faster than `goot-until'.
+you can see `goot-until' if you want to get more information."
+  
+  `(while (and (not ,condition) (goot-listenmad ,@body goot-continue))))
+
+(defmacro goot-formad (condition increment &rest body)
+
+  "this provide a optimized `goot-for' that has some limitations, so this is faster than `goot-for'.
+you can see `goot-for' if you want to get more information."
+  
+  `(while (prog1 (and ,condition (goot-listenmad ,@body goot-continue)) ,increment)))
+
+(defmacro goot-blockmad (&rest body)
+
+  "this provide a optimized `goot-block' that has some limitations, so this is faster than `goot-block'.
+you can see `goot-block' if you want to get more information."
+  
+  `(while (goot-listenmad ,@body goot-break)))
