@@ -1,20 +1,21 @@
 # goot.el
 
-this provide some loop macros that support break/continue operators without exception oprators.
+this provide some macros for looping that are supported the break/continue operators.
+transformed not contain the exception oprators.
 
 # provide macros
 
 there are faster than using `catch/throw` exception.
 but, there are has some limitation.
 
-1. `goot-break` and `goot-continue` should place on the last of list.
-1. `goot-break` and `goot-continue` dont place in the some functions argument.
-you can place in the progn, prog1, prog2, if, and, or, when, unless and anymore.
+1. `goot-break` and `goot-continue` should put on the last of list.
+2. `goot-break` and `goot-continue` dont put in the some functions argument.
+you can put in the progn, prog1, prog2, if, and, or, when, unless and anymore.
 
 * `(goot-break)`
-    * this transform to symbol of `goot-break`. `goot-break` use to hint to the transforming in internal macro of `goot-listen`.
+    * this transform to symbol of `goot-break`. `goot-break` is used to hint to the transforming in internal macro of `goot-listen`.
 * `(goot-continue)`
-    * this transform to symbol of `goot-continue`. `goot-continue`use to hint to the transforming in internal macro of `goot-listen`.
+    * this transform to symbol of `goot-continue`. `goot-continue` is used to hint to the transforming in internal macro of `goot-listen`.
 * `(goot-forever &rest body)`
     * this evaluate *body* section forever, until to reach the `goot-break`. you can repeat this section from the beginning with using `goot-continue` oprator.
 * `(goot-while condition &rest body)`
@@ -24,7 +25,7 @@ you can place in the progn, prog1, prog2, if, and, or, when, unless and anymore.
 * `(goot-for condition increment &rest body)`
     * this evaluate *body* section forever, until to reach the `goot-break`, or *condition* was failed. you can repeat this section from the beginning with using `goot-continue` oprator. *increment* is evaluate always at end of loop.
 * `(goot-block &rest body)`
-    * this evaluate *body* section one times. you can repeat or abort this section with `goot-break' or `goot-continue' oprators.
+    * this evaluate *body* section one times. you can repeat or abort this section with `goot-break` or `goot-continue` oprators.
 
 # provide optimized macros
 
@@ -44,64 +45,14 @@ but, there has more limitation.
 
 # performance
 
-```lisp
-(cl-labels
-  
-  ((benchmark-sum-while (num)
-     (let ((sum 0))
-       (while (/= num 0)
-         (incf sum num)
-         (decf num))
-       sum))
-    
-    (benchmark-sum-forevermad (num)
-      (let ((sum 0))
-        (goot-forevermad
-          (if (= num 0) (goot-break))
-          (incf sum num)
-          (decf num)
-          (goot-continue))
-        sum))
-    
-    (benchmark-sum-forever (num)
-      (let ((sum 0))
-        (goot-forever
-          (if (= num 0) (goot-break))
-          (incf sum num)
-          (decf num)
-          (goot-continue))
-        sum))
-    
-    (benchmark-sum-catch/throw (num)
-      (let ((sum 0))
-        (while (catch 'loop
-                 (if (= num 0) (throw 'loop nil))
-                 (incf sum num)
-                 (decf num)
-                 (throw 'loop t)))
-        sum)))
-  
-  (let*
-    ((benchmarked-sum-while (car (benchmark-run 1000 (benchmark-sum-while 1000))))
-      (benchmarked-sum-forevermad (car (benchmark-run 1000 (benchmark-sum-forevermad 1000))))
-      (benchmarked-sum-forever (car (benchmark-run 1000 (benchmark-sum-forever 1000))))
-      (benchmarked-sum-catch/throw (car (benchmark-run 1000 (benchmark-sum-catch/throw 1000)))))        
-    (message "%f sec spended. (while only)" benchmarked-sum-while)
-    (message "%f sec spended. (goot-forevermad)" benchmarked-sum-forevermad)
-    (message "%f sec spended. (goot-forever)" benchmarked-sum-forever)
-    (message "%f sec spended. (catch/throw)" benchmarked-sum-catch/throw)         
-    (message "%d%% faster than catch/throw. (while only)" (- 100 (* 100 (/ benchmarked-sum-while benchmarked-sum-catch/throw))))
-    (message "%d%% faster than catch/throw. (goot-forevermad)" (- 100 (* 100 (/ benchmarked-sum-forevermad benchmarked-sum-catch/throw))))
-    (message "%d%% faster than catch/throw. (goot-forever)" (- 100 (* 100 (/ benchmarked-sum-forever benchmarked-sum-catch/throw))))
-    (message "%d%% faster than catch/throw. (catch/throw)" (- 100 (* 100 (/ benchmarked-sum-catch/throw benchmarked-sum-catch/throw))))))
-```
+I included a [goot-bench.el](goot-bench.el) in this repositry.
 
 ## not compiled
 
 in this result, while only is most faster.
-goot-forever and goot-forevermad is faster a little,
-because that are expand `(incf sum num)` and `(decf num)` to while condition place,
-that should expand to while body place if want get more faster.
+goot-forever and goot-forevermad is fast a little,
+because that are expand `(incf sum num)` and `(decf num)` to place of condition in while oprator,
+that should expand to place of body in while oprator if want get more faster.
 
 | using | spend time | how many faster |
 | --- | --- | --- |
