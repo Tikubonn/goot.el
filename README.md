@@ -100,7 +100,6 @@ but, there has more limitation.
 | while only | goot-forevermad | goot-forever | catch/throw |
 | --- | --- | --- | --- |
 | 0.251511 sec | 0.277954 sec | 0.332029 sec | 0.372102 sec |
-| --- | --- | --- | --- |
 | 45% faster | 25% faster | 10% faster | 0% faster |
 
 ## compiled
@@ -108,5 +107,4 @@ but, there has more limitation.
 | while only | goot-forevermad | goot-forever | catch/throw |
 | --- | --- | --- | --- |
 | 0.045474 sec | 0.045242 sec | 0.053141 sec | 0.167039 sec |
-| --- | --- | --- | --- |
 | 72% faster | 72% faster | 68% faster | 0% faster |
