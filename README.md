@@ -98,6 +98,11 @@ but, there has more limitation.
 
 ## not compiled
 
+in this result, while only is most faster.
+goot-forever and goot-forevermad is faster a little,
+because that are expand `(incf sum num)` and `(decf num)` to while condition place,
+that should expand to while body place if want get more faster.
+
 | using | spend time | how many faster |
 | --- | --- | --- |
 | while only | 0.251511 sec | 45% faster |
@@ -106,6 +111,10 @@ but, there has more limitation.
 | catch/throw | 0.372102 sec | 0% faster |
 
 ## compiled
+
+in this result, goot-forever and goot-forevermad preformance benefited from compiled.
+surprisingly goot-forevermad is fast as while only.
+but a function of catch/throw is not faster than other functions.
 
 | using | spend time | how many faster |
 | --- | --- | --- |
