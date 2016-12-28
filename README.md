@@ -97,22 +97,16 @@ but, there has more limitation.
 
 ## not compiled
 
-*0.201511* sec spended. (while only)  
-*0.277954* sec spended. (goot-forevermad)  
-*0.332029* sec spended. (goot-forever)  
-*0.372102* sec spended. (catch/throw)  
-*45%* faster than catch/throw. (while only)  
-*25%* faster than catch/throw. (goot-forevermad)  
-*10%* faster than catch/throw. (goot-forever)  
-*0% *faster than catch/throw. (catch/throw)
+| while only | goot-forevermad | goot-forever | catch/throw |
+| --- | --- | --- | --- |
+| 0.251511 sec | 0.277954 sec | 0.332029 sec | 0.372102 sec |
+| --- | --- | --- | --- |
+| 45% faster | 25% faster | 10% faster | 0% faster |
 
 ## compiled
 
-*0.045474* sec spended. (while only)  
-*0.045242* sec spended. (goot-forevermad)  
-*0.053141* sec spended. (goot-forever)  
-*0.167039* sec spended. (catch/throw)  
-*72%* faster than catch/throw. (while only)  
-*72%* faster than catch/throw. (goot-forevermad)  
-*68%* faster than catch/throw. (goot-forever)  
-*0% *faster than catch/throw. (catch/throw)  
+| while only | goot-forevermad | goot-forever | catch/throw |
+| --- | --- | --- | --- |
+| 0.045474 sec | 0.045242 sec | 0.053141 sec | 0.167039 sec |
+| --- | --- | --- | --- |
+| 72% faster | 72% faster | 68% faster | 0% faster |
