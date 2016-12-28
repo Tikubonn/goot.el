@@ -8,7 +8,8 @@ there are faster than using `catch/throw` exception.
 but, there are has some limitation.
 
 1. `goot-break` and `goot-continue` should place on the last of list.
-1. `goot-break` and `goot-continue` dont place in the some functions argument (not progn if and or ... ).
+1. `goot-break` and `goot-continue` dont place in the some functions argument.
+you can place in the progn, prog1, prog2, if, and, or, when, unless and anymore.
 
 * `(goot-break)`
     * this transform to symbol of `goot-break`. `goot-break` use to hint to the transforming in internal macro of `goot-listen`.
@@ -97,14 +98,18 @@ but, there has more limitation.
 
 ## not compiled
 
-| while only | goot-forevermad | goot-forever | catch/throw |
-| --- | --- | --- | --- |
-| 0.251511 sec | 0.277954 sec | 0.332029 sec | 0.372102 sec |
-| 45% faster | 25% faster | 10% faster | 0% faster |
+| using | spend time | how many faster |
+| --- | --- | --- |
+| while only | 0.251511 sec | 45% faster |
+| goot-forevermad | 0.277954 sec | 25% faster |
+| goot-forever | 0.332029 sec | 10% faster |
+| catch/throw | 0.372102 sec | 0% faster |
 
 ## compiled
 
-| while only | goot-forevermad | goot-forever | catch/throw |
-| --- | --- | --- | --- |
-| 0.045474 sec | 0.045242 sec | 0.053141 sec | 0.167039 sec |
-| 72% faster | 72% faster | 68% faster | 0% faster |
+| using | spend time | how many faster |
+| --- | --- | --- |
+| while only | 0.045474 sec | 72% faster |
+| goot-forevermad | 0.045242 sec | 72% faster |
+| goot-forever | 0.053141 sec | 68% faster |
+| catch/throw | 0.167039 sec | 0% faster |
