@@ -144,10 +144,10 @@
     (if (equal `(quote ,goot-break-symbol) (car sources)) `(goot-progn ,@(nreverse acc) nil)
       (if (equal `(quote ,goot-continue-symbol) (car sources)) `(goot-progn ,@(nreverse acc) t)
         (if (goot-symfind goot-break-symbol (car sources))
-          (let ((formula `(if ,(goot-listen-build2mad-transform (car sources)) nil  ,(goot-listen-build2 (cdr sources)))))
+          (let ((formula `(if ,(goot-listen-build2mad-transform (car sources)) nil  ,(goot-listen-build2mad (cdr sources)))))
             (if acc `(progn ,@(nreverse acc) ,formula) formula))
           (if (goot-symfind goot-continue-symbol (car sources))
-            (let ((formula `(if  ,(goot-listen-build2mad-transform (car sources)) t ,(goot-listen-build2 (cdr sources)))))
+            (let ((formula `(if  ,(goot-listen-build2mad-transform (car sources)) t ,(goot-listen-build2mad (cdr sources)))))
               (if acc `(progn ,@(nreverse acc) ,formula) formula))
             (goot-listen-build2 (cdr sources) (cons (car sources) acc))))))))
 
