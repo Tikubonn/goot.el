@@ -277,7 +277,7 @@ increment is evaluate always at end of loop."
   "this evaluate body section one times.
 you can repeat or abort this section with `goot-break' or `goot-continue' oprators."
   
-  `(goot-base ,@body goot-break))
+  `(goot-base t ,@body goot-break))
 
 ;; define provide optimized methods
 
@@ -314,18 +314,5 @@ you can see `goot-for' if you want to get more information."
   "this provide a optimized `goot-block' that has some limitations, so this is faster than `goot-block'.
 you can see `goot-block' if you want to get more information."
   
-  `(goot-basemad ,@body goot-break))
+  `(goot-basemad t ,@body goot-break))
 
-(defmacro goot-test (formula)
-  (prog1 formula
-    (print (macroexpand-all formula))))
-
-(print
-  (goot-test
-    (let
-      ((sum 0)
-        (num 128))
-      (goot-forever
-        (if (= num 0) (goot-return sum))
-        (incf sum num)
-        (decf num)))))
