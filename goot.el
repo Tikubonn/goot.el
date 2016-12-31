@@ -123,7 +123,7 @@
 (defun goot-base-build2 (sources &optional acc)
   (if (null sources) nil
     (if (equal `(quote ,goot-break-symbol) (car sources)) (macroexpand-all `(goot-progn ,@(nreverse acc) nil))
-      (if (equal `(quote ,goot-continue-symbol) (car sources)) (progn (print acc) (macroexpand-all `(goot-progn ,@(nreverse acc) t))) ;; bug in here
+      (if (equal `(quote ,goot-continue-symbol) (car sources)) (macroexpand-all `(goot-progn ,@(nreverse acc) t))
         (if (goot-symfind goot-break-symbol (car sources))          
           (let*
             ((first (car sources))
