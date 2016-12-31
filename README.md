@@ -1,21 +1,26 @@
+
 # goot.el
 
-this provide some macros for looping that are supported the break/continue operators.
-transformed not contain the exception oprators.
+this provide some macros for looping that are supported the break/continue/return operators without exception oprators.
+this is more faster than using the exception operators.
+because on compiled, those performance are not better than condition operators.
+so there macros transalte formula to the formula with just condition operators.
 
 # provide macros
 
 there are faster than using `catch/throw` exception.
 but, there are has some limitation.
 
-1. `goot-break` and `goot-continue` should put on the last of list.
-2. `goot-break` and `goot-continue` dont put in the some functions argument.
+1. `goot-break` `goot-continue` and `goot-return` should put on the last of list.
+2. `goot-break` `goot-continue` and `goot-return` dont put in the some functions argument.
 you can put in the progn, prog1, prog2, if, and, or, when, unless and anymore.
 
 * `(goot-break)`
-    * this transform to symbol of `goot-break`. `goot-break` is used to hint to the transforming in internal macro of `goot-listen`.
+    * this transform to symbol of `goot-break`. `goot-break` is used to hint to the transforming in internal macro of `goot-base`.
 * `(goot-continue)`
-    * this transform to symbol of `goot-continue`. `goot-continue` is used to hint to the transforming in internal macro of `goot-listen`.
+    * this transform to symbol of `goot-continue`. `goot-continue` is used to hint to the transforming in internal macro of `goot-base`.
+* `(goot-return &optional value)`
+    * this transform to a formula that contain goot-break and goot-return. `goot-return` is used to hint to the transforming in internal macro of `goot-base`.
 * `(goot-forever &rest body)`
     * this evaluate *body* section forever, until to reach the `goot-break`. you can repeat this section from the beginning with using `goot-continue` oprator.
 * `(goot-while condition &rest body)`
@@ -31,6 +36,11 @@ you can put in the progn, prog1, prog2, if, and, or, when, unless and anymore.
 
 there are little faster than other macros in goot.el.
 but, there has more limitation.
+
+1. there macros cannot use the some operators.
+some operators should return a nil if condition was failed.
+for example, the condition operator of `or` is cannot use to there macros.
+because `or` operator cannot promise that return a nil if condition was failed.
 
 * `(goot-forevermad &rest body)`
     * same as `goot-forever`
@@ -73,3 +83,7 @@ but a function of catch/throw is not faster than other functions.
 | goot-forevermad | 0.045242 sec | 72% faster |
 | goot-forever | 0.053141 sec | 68% faster |
 | catch/throw | 0.167039 sec | 0% faster |
+
+# licence
+
+this was released under the MIT License.
